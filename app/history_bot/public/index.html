@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>历史人物聊天机器人</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        
+        .chat-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .input-section {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        select, textarea, button {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        
+        select {
+            background-color: white;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .response-section {
+            padding: 20px;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        
+        .response {
+            background-color: #ecf0f1;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+        
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+        
+        .history人物-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .history人物-item {
+            background-color: #3498db;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .history人物-item:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>历史人物聊天机器人</h1>
+        
+        <div class="chat-container">
+            <div class="input-section">
+                <div class="form-group">
+                    <label for="person">选择历史人物</label>
+                    <select id="person" name="person">
+                        <option value="">-- 请选择历史人物 --</option>
+                        <option value="孔子">孔子</option>
+                        <option value="秦始皇">秦始皇</option>
+                        <option value="汉武帝">汉武帝</option>
+                        <option value="唐太宗">唐太宗</option>
+                        <option value="李白">李白</option>
+                        <option value="苏轼">苏轼</option>
+                        <option value="诸葛亮">诸葛亮</option>
+                        <option value="武则天">武则天</option>
+                    </select>
+                    <div class="history人物-list">
+                        <div class="history人物-item" data-person="孔子">孔子</div>
+                        <div class="history人物-item" data-person="秦始皇">秦始皇</div>
+                        <div class="history人物-item" data-person="汉武帝">汉武帝</div>
+                        <div class="history人物-item" data-person="唐太宗">唐太宗</div>
+                        <div class="history人物-item" data-person="李白">李白</div>
+                        <div class="history人物-item" data-person="苏轼">苏轼</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="question">你的问题</label>
+                    <textarea id="question" name="question" placeholder="请输入你想要问历史人物的问题..."></textarea>
+                </div>
+                
+                <button id="submit-btn">发送问题</button>
+            </div>
+            
+            <div class="response-section">
+                <div id="loading" class="loading" style="display: none;">正在思考中...</div>
+                <div id="response" class="response" style="display: none;"></div>
+                <div id="error" class="error" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const submitBtn = document.getElementById('submit-btn');
+            const personSelect = document.getElementById('person');
+            const questionTextarea = document.getElementById('question');
+            const loadingDiv = document.getElementById('loading');
+            const responseDiv = document.getElementById('response');
+            const errorDiv = document.getElementById('error');
+            
+            // 快速选择历史人物
+            document.querySelectorAll('.history人物-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const person = item.getAttribute('data-person');
+                    personSelect.value = person;
+                });
+            });
+            
+            submitBtn.addEventListener('click', async () => {
+                const person = personSelect.value;
+                const question = questionTextarea.value.trim();
+                
+                // 清空之前的结果
+                responseDiv.style.display = 'none';
+                errorDiv.style.display = 'none';
+                
+                // 验证输入
+                if (!person) {
+                    showError('请选择历史人物');
+                    return;
+                }
+                
+                if (!question) {
+                    showError('请输入你的问题');
+                    return;
+                }
+                
+                // 显示加载状态
+                loadingDiv.style.display = 'block';
+                submitBtn.disabled = true;
+                
+                try {
+                    // 发送请求
+                    const response = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ person, question })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        showResponse(result.response);
+                    } else {
+                        showError(result.error || '请求失败');
+                    }
+                } catch (err) {
+                    showError('网络错误，请稍后重试');
+                    console.error('请求错误:', err);
+                } finally {
+                    // 隐藏加载状态
+                    loadingDiv.style.display = 'none';
+                    submitBtn.disabled = false;
+                }
+            });
+            
+            function showResponse(response) {
+                responseDiv.textContent = response;
+                responseDiv.style.display = 'block';
+            }
+            
+            function showError(error) {
+                errorDiv.textContent = error;
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
