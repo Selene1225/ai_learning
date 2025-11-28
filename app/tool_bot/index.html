@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全球城市时间查询</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        
+        .chat-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .input-section {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input, button {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        
+        input {
+            background-color: white;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .city-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .city-item {
+            background-color: #3498db;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .city-item:hover {
+            background-color: #2980b9;
+        }
+        
+        .response-section {
+            padding: 20px;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        
+        .response {
+            background-color: #ecf0f1;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+        
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>全球城市时间查询</h1>
+        
+        <div class="chat-container">
+            <div class="input-section">
+                <div class="form-group">
+                    <label for="city">城市名称</label>
+                    <input type="text" id="city" name="city" placeholder="请输入城市名称（英文，例如：Beijing、New York、London）">
+                    <div class="city-list">
+                        <div class="city-item" data-city="Beijing">北京</div>
+                        <div class="city-item" data-city="Shanghai">上海</div>
+                        <div class="city-item" data-city="New York">纽约</div>
+                        <div class="city-item" data-city="London">伦敦</div>
+                        <div class="city-item" data-city="Tokyo">东京</div>
+                        <div class="city-item" data-city="Paris">巴黎</div>
+                        <div class="city-item" data-city="Sydney">悉尼</div>
+                        <div class="city-item" data-city="Los Angeles">洛杉矶</div>
+                        <div class="city-item" data-city="Chicago">芝加哥</div>
+                        <div class="city-item" data-city="Houston">休斯顿</div>
+                    </div>
+                </div>
+                
+                <button id="submit-btn">查询时间</button>
+            </div>
+            
+            <div class="response-section">
+                <div id="loading" class="loading" style="display: none;">正在查询中...</div>
+                <div id="response" class="response" style="display: none;"></div>
+                <div id="error" class="error" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const submitBtn = document.getElementById('submit-btn');
+            const cityInput = document.getElementById('city');
+            const loadingDiv = document.getElementById('loading');
+            const responseDiv = document.getElementById('response');
+            const errorDiv = document.getElementById('error');
+            
+            // 快速选择城市
+            document.querySelectorAll('.city-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const city = item.getAttribute('data-city');
+                    cityInput.value = city;
+                    submitBtn.click();
+                });
+            });
+            
+            submitBtn.addEventListener('click', async () => {
+                const city = cityInput.value.trim();
+                
+                // 清空之前的结果
+                responseDiv.style.display = 'none';
+                errorDiv.style.display = 'none';
+                
+                // 验证输入
+                if (!city) {
+                    showError('请输入城市名称');
+                    return;
+                }
+                
+                // 显示加载状态
+                loadingDiv.style.display = 'block';
+                submitBtn.disabled = true;
+                
+                try {
+                    // 发送请求
+                    const response = await fetch(`http://localhost:5000/api/time?city=${encodeURIComponent(city)}`);
+                    const result = await response.json();
+                    
+                    if (result.current_time === 'unknown') {
+                        showError(`无法获取${city}的时间信息`);
+                    } else {
+                        showResponse(`<strong>${result.location}</strong>的当前时间是：${result.current_time}`);
+                    }
+                } catch (err) {
+                    showError('网络错误，请稍后重试');
+                    console.error('请求错误:', err);
+                } finally {
+                    // 隐藏加载状态
+                    loadingDiv.style.display = 'none';
+                    submitBtn.disabled = false;
+                }
+            });
+            
+            // 回车键触发查询
+            cityInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    submitBtn.click();
+                }
+            });
+            
+            function showResponse(response) {
+                responseDiv.innerHTML = response;
+                responseDiv.style.display = 'block';
+            }
+            
+            function showError(error) {
+                errorDiv.textContent = error;
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
