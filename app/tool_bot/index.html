@@ -52,7 +52,7 @@
             color: #555;
         }
         
-        input, button {
+        input, textarea, button {
             width: 100%;
             padding: 12px;
             border: 1px solid #ddd;
@@ -60,8 +60,14 @@
             font-size: 16px;
         }
         
-        input {
+        input, textarea {
             background-color: white;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
         }
         
         button {
@@ -71,6 +77,7 @@
             cursor: pointer;
             font-weight: 600;
             transition: background-color 0.3s ease;
+            margin-top: 10px;
         }
         
         button:hover {
@@ -128,6 +135,38 @@
             border-radius: 6px;
             margin-top: 20px;
         }
+        
+        .tab-container {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #7f8c8d;
+            margin: 0;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -136,24 +175,43 @@
         
         <div class="chat-container">
             <div class="input-section">
-                <div class="form-group">
-                    <label for="city">城市名称</label>
-                    <input type="text" id="city" name="city" placeholder="请输入城市名称（英文，例如：Beijing、New York、London）">
-                    <div class="city-list">
-                        <div class="city-item" data-city="Beijing">北京</div>
-                        <div class="city-item" data-city="Shanghai">上海</div>
-                        <div class="city-item" data-city="New York">纽约</div>
-                        <div class="city-item" data-city="London">伦敦</div>
-                        <div class="city-item" data-city="Tokyo">东京</div>
-                        <div class="city-item" data-city="Paris">巴黎</div>
-                        <div class="city-item" data-city="Sydney">悉尼</div>
-                        <div class="city-item" data-city="Los Angeles">洛杉矶</div>
-                        <div class="city-item" data-city="Chicago">芝加哥</div>
-                        <div class="city-item" data-city="Houston">休斯顿</div>
-                    </div>
+                <!-- 标签页切换 -->
+                <div class="tab-container">
+                    <button class="tab active" data-tab="direct">直接查询</button>
+                    <button class="tab" data-tab="ai">AI 自然语言查询</button>
                 </div>
                 
-                <button id="submit-btn">查询时间</button>
+                <!-- 直接查询标签页 -->
+                <div class="tab-content active" id="direct">
+                    <div class="form-group">
+                        <label for="city">城市名称</label>
+                        <input type="text" id="city" name="city" placeholder="请输入城市名称（英文，例如：Beijing、New York、London）">
+                        <div class="city-list">
+                            <div class="city-item" data-city="Beijing">北京</div>
+                            <div class="city-item" data-city="Shanghai">上海</div>
+                            <div class="city-item" data-city="New York">纽约</div>
+                            <div class="city-item" data-city="London">伦敦</div>
+                            <div class="city-item" data-city="Tokyo">东京</div>
+                            <div class="city-item" data-city="Paris">巴黎</div>
+                            <div class="city-item" data-city="Sydney">悉尼</div>
+                            <div class="city-item" data-city="Los Angeles">洛杉矶</div>
+                            <div class="city-item" data-city="Chicago">芝加哥</div>
+                            <div class="city-item" data-city="Houston">休斯顿</div>
+                        </div>
+                    </div>
+                    
+                    <button id="direct-submit-btn">查询时间</button>
+                </div>
+                
+                <!-- AI 查询标签页 -->
+                <div class="tab-content" id="ai">
+                    <div class="form-group">
+                        <label for="ai-query">自然语言提问</label>
+                        <textarea id="ai-query" name="ai-query" placeholder="请用自然语言提问，例如：北京现在几点？纽约的时间是多少？"></textarea>
+                    </div>
+                    
+                    <button id="ai-submit-btn">AI 查询</button>
+                </div>
             </div>
             
             <div class="response-section">
@@ -166,24 +224,67 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const submitBtn = document.getElementById('submit-btn');
-            const cityInput = document.getElementById('city');
             const loadingDiv = document.getElementById('loading');
             const responseDiv = document.getElementById('response');
             const errorDiv = document.getElementById('error');
+            
+            // 标签页切换功能
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // 移除所有活动状态
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // 添加当前活动状态
+                    tab.classList.add('active');
+                    const tabContent = document.getElementById(tab.getAttribute('data-tab'));
+                    tabContent.classList.add('active');
+                });
+            });
+            
+            // 直接查询功能
+            const directSubmitBtn = document.getElementById('direct-submit-btn');
+            const cityInput = document.getElementById('city');
             
             // 快速选择城市
             document.querySelectorAll('.city-item').forEach(item => {
                 item.addEventListener('click', () => {
                     const city = item.getAttribute('data-city');
                     cityInput.value = city;
-                    submitBtn.click();
+                    directSubmitBtn.click();
                 });
             });
             
-            submitBtn.addEventListener('click', async () => {
+            directSubmitBtn.addEventListener('click', async () => {
                 const city = cityInput.value.trim();
-                
+                await queryDirectTime(city);
+            });
+            
+            // 回车键触发直接查询
+            cityInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    directSubmitBtn.click();
+                }
+            });
+            
+            // AI 查询功能
+            const aiSubmitBtn = document.getElementById('ai-submit-btn');
+            const aiQueryInput = document.getElementById('ai-query');
+            
+            aiSubmitBtn.addEventListener('click', async () => {
+                const query = aiQueryInput.value.trim();
+                await queryAITime(query);
+            });
+            
+            // 回车键触发 AI 查询
+            aiQueryInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    aiSubmitBtn.click();
+                }
+            });
+            
+            // 直接查询时间函数
+            async function queryDirectTime(city) {
                 // 清空之前的结果
                 responseDiv.style.display = 'none';
                 errorDiv.style.display = 'none';
@@ -196,7 +297,7 @@
                 
                 // 显示加载状态
                 loadingDiv.style.display = 'block';
-                submitBtn.disabled = true;
+                directSubmitBtn.disabled = true;
                 
                 try {
                     // 发送请求
@@ -214,16 +315,52 @@
                 } finally {
                     // 隐藏加载状态
                     loadingDiv.style.display = 'none';
-                    submitBtn.disabled = false;
+                    directSubmitBtn.disabled = false;
                 }
-            });
+            }
             
-            // 回车键触发查询
-            cityInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    submitBtn.click();
+            // AI 查询时间函数
+            async function queryAITime(query) {
+                // 清空之前的结果
+                responseDiv.style.display = 'none';
+                errorDiv.style.display = 'none';
+                
+                // 验证输入
+                if (!query) {
+                    showError('请输入查询内容');
+                    return;
                 }
-            });
+                
+                // 显示加载状态
+                loadingDiv.style.display = 'block';
+                aiSubmitBtn.disabled = true;
+                
+                try {
+                    // 发送请求
+                    const response = await fetch('http://localhost:5000/api/ai-time', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ query: query })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.error) {
+                        showError(result.error);
+                    } else {
+                        showResponse(result.response);
+                    }
+                } catch (err) {
+                    showError('网络错误，请稍后重试');
+                    console.error('请求错误:', err);
+                } finally {
+                    // 隐藏加载状态
+                    loadingDiv.style.display = 'none';
+                    aiSubmitBtn.disabled = false;
+                }
+            }
             
             function showResponse(response) {
                 responseDiv.innerHTML = response;
