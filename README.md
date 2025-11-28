@@ -15,4 +15,5 @@ open http://localhost:3000
 app\tool_bot: python app.py
 ```
 open file tool_bot\index.html
-<img width="1587" height="1015" alt="image" src="https://github.com/user-attachments/assets/4435fed0-3934-44f9-981d-86baf76a0c23" />
+<img width="1687" height="1092" alt="image" src="https://github.com/user-attachments/assets/ba08dae6-9844-4d2f-9cb6-b065a25d216d" />
+
