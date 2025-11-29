@@ -1,0 +1,8 @@
+# Python依赖列表
+# 用于奥斯卡获奖数据RAG AI Bot
+
+python-dotenv>=1.0.0
+openai>=1.30.0
+chromadb>=0.5.0
+kagglehub[pandas-datasets]>=0.3.0
+pandas>=2.2.0
