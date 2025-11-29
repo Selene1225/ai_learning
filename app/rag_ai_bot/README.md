@@ -14,7 +14,7 @@
 
 - **前端**: HTML + CSS + JavaScript
 - **后端**: Node.js + TypeScript + Express
-- **RAG 核心**: Python + Chroma + OpenAI API
+- **RAG 核心**: Python + Chroma (内置嵌入模型) + OpenAI API
 - **数据集**: 奥斯卡获奖数据集 (Kaggle)
 
 ## 项目结构
@@ -28,6 +28,8 @@ rag_ai_bot/
 ├── chroma_db/           # Chroma 向量数据库持久化目录
 ├── rag_chat.py          # Python RAG 核心聊天逻辑
 ├── load_data.py         # 数据加载和处理脚本
+├── recreate_collection.py  # 重新创建集合脚本
+├── check_chroma_db.py      # 查看数据库结构脚本
 ├── package.json         # Node.js 依赖配置
 ├── requirements.txt     # Python 依赖配置
 └── README.md            # 项目说明
@@ -38,7 +40,7 @@ rag_ai_bot/
 - Node.js 16+ 
 - Python 3.7+  
 - npm 或 yarn
-- 有效的 OpenAI API 密钥
+- 有效的 OpenAI API 密钥（用于 LLM 调用）
 
 ## 安装依赖
 
@@ -59,9 +61,16 @@ pip install -r requirements.txt
 确保项目根目录下有 `.env` 文件，包含以下配置：
 
 ```
-QWEN_APP_KEY=sk-234
+# deepseek
+API_KEY=sk-xxx
+BASE_URL=https://api.deepseek.com/v1
+MODEL=deepseek-chat
+
+# qwen
+QWEN_APP_KEY=sk-xxx
 QWEN_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-RAG_MODEL=text-embedding-v3
+TOOL_CALL_MODEL=qwen3-max
+CHAT_MODEL=qwen3-max
 ```
 
 ## 数据准备
@@ -107,6 +116,22 @@ npm start
 
 ## 开发说明
 
+### 查看数据库结构
+
+可以使用以下脚本查看 Chroma 数据库的结构：
+
+```bash
+python check_chroma_db.py
+```
+
+### 重新创建集合
+
+如果需要重新创建集合（例如嵌入维度不匹配时），可以使用以下脚本：
+
+```bash
+python recreate_collection.py
+```
+
 ### 修改数据集
 
 编辑 `load_data.py` 文件，您可以：
@@ -128,6 +153,13 @@ npm start
 - 调整页面样式
 - 修改输入输出区域
 - 添加新的交互功能
+
+## 注意事项
+
+1. 本项目使用 Chroma 内置的嵌入模型，不需要额外配置嵌入模型
+2. 数据加载脚本默认只加载前 1000 条数据进行测试
+3. 如果遇到嵌入维度不匹配的错误，可以使用 `recreate_collection.py` 脚本重新创建集合
+4. 可以使用 `check_chroma_db.py` 脚本查看数据库结构
 
 ## 许可证
 
