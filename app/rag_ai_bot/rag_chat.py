@@ -17,6 +17,10 @@ deployment_name = os.environ.get("CHAT_MODEL")
 
 # 自定义OpenAI嵌入函数
 class OpenAIEmbeddingFunction(EmbeddingFunction):
+    def __init__(self):
+        # 初始化方法，满足Chroma未来版本的要求
+        pass
+    
     def __call__(self, input: Documents) -> Embeddings:
         # 调用OpenAI API生成嵌入（使用OpenAI 1.0.0+新API格式）
         client = openai.OpenAI(
