@@ -1,4 +1,4 @@
-# Background
+<img width="1619" height="1458" alt="image" src="https://github.com/user-attachments/assets/a5140619-f2be-4563-8d0d-6aa52313d9ad" /># Background
 Start to learn building AI applications.
 All of applications are in the folder `app`.
 
@@ -17,3 +17,6 @@ app\tool_bot: python app.py
 open file tool_bot\index.html
 <img width="1687" height="1092" alt="image" src="https://github.com/user-attachments/assets/ba08dae6-9844-4d2f-9cb6-b065a25d216d" />
 
+3. rag_chat_bot
+chroma + openai
+<img width="1619" height="1458" alt="image" src="https://github.com/user-attachments/assets/b5431d96-b41b-4bc8-8ec0-ce516c0bfc89" />
