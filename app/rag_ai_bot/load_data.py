@@ -18,13 +18,33 @@ openai.api_key = os.environ.get("QWEN_APP_KEY")
 openai.base_url = os.environ.get("QWEN_BASE_URL") + "/"
 openai.api_type = "openai"
 
-# 初始化Chroma客户端和集合
+# 自定义OpenAI嵌入函数
+class OpenAIEmbeddingFunction(EmbeddingFunction):
+    def __call__(self, input: Documents) -> Embeddings:
+        # 调用OpenAI API生成嵌入（使用OpenAI 1.0.0+新API格式）
+        client = openai.OpenAI(
+            api_key=openai.api_key,
+            base_url=openai.base_url
+        )
+        response = client.embeddings.create(
+            model="text-embedding-v2",
+            input=input
+        )
+        # 提取嵌入向量
+        embeddings = [item.embedding for item in response.data]
+        return embeddings
+
+# 初始化Chroma客户端
 chroma_client = chromadb.PersistentClient(path="./chroma_db")
 
-# 获取或创建集合 - 使用Chroma内置的嵌入模型
-collection = chroma_client.get_or_create_collection(
-    name="oscar_awards"
-    # 不指定embedding_function，使用Chroma内置的嵌入模型
+# 删除旧集合（如果存在）
+if "oscar_awards" in [col.name for col in chroma_client.list_collections()]:
+    chroma_client.delete_collection("oscar_awards")
+
+# 创建新集合，使用自定义OpenAI嵌入函数
+collection = chroma_client.create_collection(
+    name="oscar_awards",
+    embedding_function=OpenAIEmbeddingFunction()
 )
 
 def load_and_process_data():
@@ -50,12 +70,16 @@ def load_and_process_data():
         
         # 选择相关列
         relevant_columns = ['year_ceremony', 'category', 'name', 'film', 'winner']
+        df = df[relevant_columns]
         
-        # 过滤掉缺失值
-        df = df[relevant_columns].dropna()
+        # 只保留2022年及以后的数据
+        df = df[df['year_ceremony'] >= 2022]
         
-        # 限制数据量（可选，用于测试）
-        df = df.head(100)  # 只使用前1000条数据进行测试
+        # 过滤掉空的film条目
+        df = df[df['film'].notna() & (df['film'] != '')]
+        
+        # 过滤掉其他缺失值
+        df = df.dropna()
         
         # 构建文档列表
         documents = []

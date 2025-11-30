@@ -14,8 +14,8 @@
 
 - **前端**: HTML + CSS + JavaScript
 - **后端**: Node.js + TypeScript + Express
-- **RAG 核心**: Python + Chroma (内置嵌入模型) + OpenAI API
-- **数据集**: 奥斯卡获奖数据集 (Kaggle)
+- **RAG 核心**: Python + Chroma (自定义OpenAI嵌入函数) + OpenAI API
+- **数据集**: 奥斯卡获奖数据集 (Kaggle, 2022年及以后)
 
 ## 项目结构
 
@@ -71,6 +71,7 @@ QWEN_APP_KEY=sk-xxx
 QWEN_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 TOOL_CALL_MODEL=qwen3-max
 CHAT_MODEL=qwen3-max
+RAG_MODEL=text-embedding-v2
 ```
 
 ## 数据准备
@@ -80,6 +81,19 @@ CHAT_MODEL=qwen3-max
 ```bash
 python load_data.py
 ```
+
+### 数据处理逻辑
+
+数据加载脚本会执行以下处理：
+1. 从 Kaggle 加载完整的奥斯卡获奖数据集
+2. **只保留 2022 年及以后的数据**
+3. **过滤掉空的 film 条目**
+4. 使用自定义 OpenAI 嵌入函数生成向量
+5. 将处理后的数据分批插入 Chroma 数据库
+
+### 数据量
+
+处理后的数据量约为 **481 条记录**（基于 2022 年及以后的奥斯卡获奖数据）
 
 ## 运行应用
 
@@ -156,10 +170,13 @@ python recreate_collection.py
 
 ## 注意事项
 
-1. 本项目使用 Chroma 内置的嵌入模型，不需要额外配置嵌入模型
-2. 数据加载脚本默认只加载前 1000 条数据进行测试
-3. 如果遇到嵌入维度不匹配的错误，可以使用 `recreate_collection.py` 脚本重新创建集合
-4. 可以使用 `check_chroma_db.py` 脚本查看数据库结构
+1. 本项目使用**自定义 OpenAI 嵌入函数**（`text-embedding-v2`），需要确保环境变量中配置了有效的 `QWEN_APP_KEY` 和 `QWEN_BASE_URL`
+2. 数据加载脚本会处理**所有 2022 年及以后**的有效数据，不限制数据量
+3. 数据加载使用**分批处理**（每批 10 条），避免 API 速率限制
+4. 如果遇到嵌入维度不匹配的错误，可以使用 `recreate_collection.py` 脚本重新创建集合
+5. 可以使用 `check_chroma_db.py` 脚本查看数据库结构
+6. 确保 `load_data.py` 和 `rag_chat.py` 使用**相同的嵌入函数**，否则会导致向量空间不一致
+7. 项目使用 **OpenAI 1.0.0+ API 格式**，确保 Python 依赖中的 `openai` 包版本兼容
 
 ## 许可证
 
