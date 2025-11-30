@@ -4,6 +4,7 @@ import openai
 import sys
 import json
 import chromadb
+from chromadb import Documents, EmbeddingFunction, Embeddings
 
 # 加载环境变量
 load_dotenv(dotenv_path='../../.env')
@@ -14,13 +15,29 @@ openai.base_url = os.environ.get("QWEN_BASE_URL") + "/"
 openai.api_type = "openai"
 deployment_name = os.environ.get("CHAT_MODEL")
 
+# 自定义OpenAI嵌入函数
+class OpenAIEmbeddingFunction(EmbeddingFunction):
+    def __call__(self, input: Documents) -> Embeddings:
+        # 调用OpenAI API生成嵌入（使用OpenAI 1.0.0+新API格式）
+        client = openai.OpenAI(
+            api_key=openai.api_key,
+            base_url=openai.base_url
+        )
+        response = client.embeddings.create(
+            model="text-embedding-v2",
+            input=input
+        )
+        # 提取嵌入向量
+        embeddings = [item.embedding for item in response.data]
+        return embeddings
+
 # 初始化Chroma客户端和集合
 chroma_client = chromadb.PersistentClient(path="./chroma_db")
 
-# 获取或创建集合 - 使用Chroma内置的嵌入模型
-collection = chroma_client.get_or_create_collection(
-    name="oscar_awards"
-    # 不指定embedding_function，使用Chroma内置的嵌入模型
+# 获取集合，使用自定义OpenAI嵌入函数
+collection = chroma_client.get_collection(
+    name="oscar_awards",
+    embedding_function=OpenAIEmbeddingFunction()
 )
 
 def rag_chat(question):
@@ -60,7 +77,11 @@ def rag_chat(question):
         
         # 4. 调用LLM生成回答
         messages = [{"role": "user", "content": prompt}]
-        completion = openai.chat.completions.create(
+        client = openai.OpenAI(
+            api_key=openai.api_key,
+            base_url=openai.base_url
+        )
+        completion = client.chat.completions.create(
             model=os.environ.get("CHAT_MODEL"), 
             messages=messages, 
             max_tokens=1000, 
